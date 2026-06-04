@@ -1,222 +1,223 @@
 # Student FV Basket CTD Analyzer
 
-## Purpose
+## What Is This?
 
-This project was built to explore the financing economics behind U.S. Treasury futures delivery baskets.
+This project is a simple educational workbook that explores how Treasury futures delivery baskets work.
 
-Rather than simply identifying the current Cheapest-to-Deliver (CTD) bond, the workbook calculates a fair-value futures price for every deliverable bond in the basket and compares:
+The workbook calculates a financing-implied fair value futures price for every bond in a delivery basket, then compares that result against the actual market futures price.
 
-* The **Ideal CTD** implied by financing economics.
-* The **Market CTD** implied by the current futures price.
-* The difference between **Ideal Net Basis** and **Market Net Basis**.
+The goal is to answer a simple question:
 
-The goal is to build intuition around:
-
-* Treasury futures delivery mechanics.
-* Basket financing economics.
-* Repo funding effects.
-* Conversion factors.
-* Accrued interest.
-* Why the market CTD can differ from the financing-implied CTD.
-* Richness and cheapness between futures and delivery economics.
-
-This is an educational project and is intended to help visualize how financing assumptions influence CTD selection.
+> Does the bond that should be cheapest to deliver match the bond that the market is currently choosing?
 
 ---
 
-# Project Logic
+# Why I Built This
 
-For each deliverable bond in the basket:
+When first learning Treasury futures, CTD selection often looks simple:
 
-1. Calculate accrued interest.
-2. Calculate dirty price.
-3. Project accrued interest to delivery.
-4. Calculate repo financing cost.
-5. Calculate a financing-implied fair value futures price.
-6. Calculate an Ideal Net Basis using the fair value futures price.
-7. Calculate a Market Net Basis using the actual market futures price.
-8. Rank all bonds by net basis.
-9. Identify:
+```text
+Lowest Net Basis = CTD
+```
 
-   * Ideal CTD
-   * Market CTD
-10. Compare the two selections and evaluate richness/cheapness.
+After building this project, I realized there is more going on.
+
+Things like:
+
+* Repo financing
+* Accrued interest
+* Conversion factors
+* Days to delivery
+
+all influence delivery economics.
+
+This workbook was built to help visualize those relationships.
 
 ---
 
 # Inputs
 
-| Input  | Description                                |
-| ------ | ------------------------------------------ |
-| CUSIP  | Bond identifier                            |
-| Repo   | Financing rate used for carry calculations |
-| CF     | CME Conversion Factor                      |
-| DTD    | Days to Delivery                           |
-| Par    | Bond par value                             |
-| Clean  | Clean bond price                           |
-| Rate   | Coupon rate                                |
-| Freq   | Coupon frequency                           |
-| Since  | Days since last coupon payment             |
-| Period | Days in coupon period                      |
+Each bond requires:
+
+| Input  | Description            |
+| ------ | ---------------------- |
+| CUSIP  | Bond identifier        |
+| Repo   | Financing rate         |
+| CF     | Conversion factor      |
+| DTD    | Days to delivery       |
+| Par    | Bond face value        |
+| Clean  | Clean price            |
+| Rate   | Coupon rate            |
+| Freq   | Coupon frequency       |
+| Since  | Days since last coupon |
+| Period | Days in coupon period  |
 
 ---
 
-# Formulas
+# Process
 
-## Coupon Payment
+For every bond in the basket:
 
-Coupon payment received per coupon period.
+### 1. Calculate Coupon Payment
 
 ```text
-Coupon Payment = (Coupon Rate × Par Value) / Coupon Frequency
+Coupon Payment = (Rate × Par) ÷ Frequency
 ```
 
----
-
-## Accrued Interest
-
-Current accrued interest since the last coupon payment.
+### 2. Calculate Accrued Interest
 
 ```text
-Accrued Interest = (Days Since Last Coupon / Days In Coupon Period)
-                   × Coupon Payment
+Accrued Interest = (Since ÷ Period) × Coupon Payment
 ```
 
----
-
-## Dirty Price
-
-Total economic purchase price of the bond.
+### 3. Calculate Dirty Price
 
 ```text
 Dirty Price = Clean Price + Accrued Interest
 ```
 
----
-
-## Projected Accrued Interest
-
-Expected accrued interest at delivery.
+### 4. Estimate Accrued Interest At Delivery
 
 ```text
-Projected Accrued Interest = Current Accrued Interest
-                             + (Days To Delivery / Days In Coupon Period)
-                             × Coupon Payment
+Projected AI =
+Current AI + (DTD ÷ Period) × Coupon Payment
 ```
 
----
-
-## Repo Financing Cost
-
-Estimated financing cost of carrying the bond until delivery.
+### 5. Calculate Financing Cost
 
 ```text
-Repo Cost = Dirty Price
-            × Repo Rate
-            × (Days To Delivery / 360)
+Repo Cost =
+Dirty Price × Repo × (DTD ÷ 360)
 ```
 
----
-
-## Fair Value Futures Price
-
-Financing-implied breakeven futures price.
+### 6. Calculate Fair Value Futures Price
 
 ```text
 Fair Value Futures Price =
-(Dirty Price + Repo Cost - Projected Accrued Interest)
+(Dirty Price + Repo Cost − Projected AI)
 ÷ Conversion Factor
 ```
 
----
-
-## Converted Futures Price
-
-Futures price adjusted using the CME conversion factor.
+### 7. Calculate Delivery Economics
 
 ```text
-Converted Futures Price =
+Converted Futures =
 Futures Price × Conversion Factor
 ```
 
----
-
-## Invoice Price
-
-Expected delivery proceeds.
-
 ```text
 Invoice Price =
-Converted Futures Price + Projected Accrued Interest
+Converted Futures + Projected AI
 ```
-
----
-
-## Gross Basis
-
-Difference between cash bond value and converted futures value.
 
 ```text
 Gross Basis =
-Dirty Price - Converted Futures Price
+Dirty Price − Converted Futures
 ```
-
----
-
-## Net Basis
-
-Difference between cash bond value and expected delivery proceeds.
 
 ```text
 Net Basis =
-Dirty Price - Invoice Price
+Dirty Price − Invoice Price
 ```
-
-Lower values indicate more attractive delivery economics.
 
 ---
 
-## CTD Selection
+# CTD Logic
 
-The Cheapest-to-Deliver bond is identified as:
+The workbook defines CTD as:
 
 ```text
 CTD = Lowest Net Basis
 ```
 
+Lower net basis values represent more attractive delivery economics.
+
 ---
 
-## Rich / Cheap Analysis
+# Two CTDs
 
-Difference between market pricing and financing-implied pricing.
+The workbook calculates two different CTDs.
+
+### Ideal CTD
+
+Uses the financing-implied fair value futures price.
+
+This answers:
+
+> Which bond should be cheapest to deliver according to the model?
+
+---
+
+### Market CTD
+
+Uses the actual market futures price.
+
+This answers:
+
+> Which bond is currently cheapest to deliver according to the market?
+
+---
+
+# Rich / Cheap Analysis
+
+The workbook compares:
+
+```text
+Market Net Basis
+```
+
+against
+
+```text
+Ideal Net Basis
+```
+
+using:
 
 ```text
 Basis Spread =
-Market Net Basis - Ideal Net Basis
+Market Net Basis − Ideal Net Basis
 ```
 
 Interpretation:
 
 ```text
 Positive = Rich
+
 Negative = Cheap
-Zero     = Fair Value
+
+Zero = Fair Value
 ```
-
-
-This allows comparison between market pricing and financing-implied pricing.
 
 ---
 
-# Educational Takeaways
+# Main Question
 
-This project demonstrates that:
+The entire project is built around one question:
 
-* CTD selection is not solely a function of conversion factors.
-* Repo financing directly impacts delivery economics.
-* Accrued interest materially affects invoice value.
-* Different financing assumptions can produce a different CTD.
-* Market CTD and financing-implied CTD are not always the same bond.
-* Treasury futures pricing is closely connected to cash bond financing.
+```text
+Does the Market CTD match the Ideal CTD?
+```
 
-The project is designed as a student tool for learning Treasury futures delivery mechanics, basis analysis, financing economics, and CTD selection.
+If the answer is no, the workbook helps visualize why.
+
+---
+
+# Lessons Learned
+
+Building this project helped reinforce a few ideas:
+
+* Treasury futures are financing instruments as much as they are duration instruments.
+* Repo matters.
+* Accrued interest matters.
+* Conversion factors matter.
+* Delivery economics matter.
+* The market CTD is not always the same as the financing-implied CTD.
+
+Most importantly:
+
+```text
+CTD selection is a financing problem.
+```
+
+This workbook was built as a student project to better understand Treasury futures delivery mechanics and basket financing.

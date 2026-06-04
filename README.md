@@ -67,49 +67,54 @@ For each deliverable bond in the basket:
 
 Coupon payment received per coupon period.
 
-[
-Payment = \frac{Rate \times Par}{Freq}
-]
+```text
+Coupon Payment = (Coupon Rate × Par Value) / Coupon Frequency
+```
 
 ---
 
 ## Accrued Interest
 
-Current accrued interest.
+Current accrued interest since the last coupon payment.
 
-[
-AI = \left(\frac{Since}{Period}\right) \times Payment
-]
+```text
+Accrued Interest = (Days Since Last Coupon / Days In Coupon Period)
+                   × Coupon Payment
+```
 
 ---
 
 ## Dirty Price
 
-Total economic purchase price.
+Total economic purchase price of the bond.
 
-[
-Dirty = Clean + AI
-]
+```text
+Dirty Price = Clean Price + Accrued Interest
+```
 
 ---
 
 ## Projected Accrued Interest
 
-Projected accrued interest at delivery.
+Expected accrued interest at delivery.
 
-[
-ProjAI = AI + \left(\frac{DTD}{Period}\right) \times Payment
-]
+```text
+Projected Accrued Interest = Current Accrued Interest
+                             + (Days To Delivery / Days In Coupon Period)
+                             × Coupon Payment
+```
 
 ---
 
 ## Repo Financing Cost
 
-Cost of carrying the bond until delivery.
+Estimated financing cost of carrying the bond until delivery.
 
-[
-RepoCost = Dirty \times Repo \times \left(\frac{DTD}{360}\right)
-]
+```text
+Repo Cost = Dirty Price
+            × Repo Rate
+            × (Days To Delivery / 360)
+```
 
 ---
 
@@ -117,11 +122,11 @@ RepoCost = Dirty \times Repo \times \left(\frac{DTD}{360}\right)
 
 Financing-implied breakeven futures price.
 
-[
-FV = \frac{Dirty + RepoCost - ProjAI}{CF}
-]
-
-This represents the futures price implied by the financing economics of the bond.
+```text
+Fair Value Futures Price =
+(Dirty Price + Repo Cost - Projected Accrued Interest)
+÷ Conversion Factor
+```
 
 ---
 
@@ -129,9 +134,10 @@ This represents the futures price implied by the financing economics of the bond
 
 Futures price adjusted using the CME conversion factor.
 
-[
-Converted = Futures \times CF
-]
+```text
+Converted Futures Price =
+Futures Price × Conversion Factor
+```
 
 ---
 
@@ -139,9 +145,10 @@ Converted = Futures \times CF
 
 Expected delivery proceeds.
 
-[
-Invoice = Converted + ProjAI
-]
+```text
+Invoice Price =
+Converted Futures Price + Projected Accrued Interest
+```
 
 ---
 
@@ -149,9 +156,10 @@ Invoice = Converted + ProjAI
 
 Difference between cash bond value and converted futures value.
 
-[
-GrossBasis = Dirty - Converted
-]
+```text
+Gross Basis =
+Dirty Price - Converted Futures Price
+```
 
 ---
 
@@ -159,61 +167,42 @@ GrossBasis = Dirty - Converted
 
 Difference between cash bond value and expected delivery proceeds.
 
-[
-NetBasis = Dirty - Invoice
-]
+```text
+Net Basis =
+Dirty Price - Invoice Price
+```
 
 Lower values indicate more attractive delivery economics.
 
 ---
 
-# CTD Selection Logic
+## CTD Selection
 
-The Cheapest-to-Deliver bond is defined as:
+The Cheapest-to-Deliver bond is identified as:
 
-[
-CTD = \min(NetBasis)
-]
-
-The bond with the lowest net basis is selected as the delivery candidate.
+```text
+CTD = Lowest Net Basis
+```
 
 ---
 
-# Ideal CTD
+## Rich / Cheap Analysis
 
-The Ideal CTD is calculated using:
+Difference between market pricing and financing-implied pricing.
 
-* Fair Value Futures Price
-* Financing assumptions
-* Repo economics
-
-This represents the bond that should be cheapest to deliver according to the model.
-
----
-
-# Market CTD
-
-The Market CTD is calculated using:
-
-* Current market futures price
-
-This represents the bond that is currently cheapest to deliver according to market pricing.
-
----
-
-# Rich / Cheap Analysis
-
-A richness and cheapness measure is calculated using:
-
-[
-BasisSpread = MarketNetBasis - IdealNetBasis
-]
+```text
+Basis Spread =
+Market Net Basis - Ideal Net Basis
+```
 
 Interpretation:
 
-* Positive → Rich
-* Negative → Cheap
-* Near Zero → Fair
+```text
+Positive = Rich
+Negative = Cheap
+Zero     = Fair Value
+```
+
 
 This allows comparison between market pricing and financing-implied pricing.
 
